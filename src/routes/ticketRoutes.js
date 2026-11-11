@@ -4,6 +4,7 @@ import {
   getTicketById,
   getTicketComments,
   getTicketsByAgentId,
+  createTicket,
 } from "../controllers/ticketsController.js";
 
 const router = express.Router();
@@ -28,4 +29,9 @@ router.get("/:ticketId/comments", getTicketComments);
 // @access Public
 router.get("/agent/:agentId", getTicketsByAgentId);
 
+// POST ROUTES
+// @route POST /api/tickets
+// @desc Create a new ticket
+// @access Customer
+router.post("/", createTicket);
 export default router;

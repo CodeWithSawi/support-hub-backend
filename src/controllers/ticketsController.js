@@ -72,10 +72,99 @@ const getTicketsByAgentId = (req, res) => {
   );
 
   if (agentTickets.length === 0) {
-    return res.status(404).json(agentTickets);
+    return res.status(404).json({ message: "No tickets found for this agent" });
   }
 
   return res.status(200).json(agentTickets);
 };
 
-export { getAllTickets, getTicketById, getTicketComments, getTicketsByAgentId };
+const createTicket = (req, res) => {
+  // Destructure the required fields from the request body
+  const { customerId, title, description, priority, category } = req.body;
+
+  if (!title || !description || !priority || !category || !customerId) {
+    return res
+      .status(400)
+      .json({ message: "Missing required fields. All fields are required." });
+  }
+  // Find the customer
+  const customer = users.find(
+    (user) => user.id === customerId && user.role === "customer",
+  );
+
+  if (!customer) {
+    return res.status(404).json({ message: "Customer not found" });
+  }
+
+  const validPriorities = ["low", "medium", "high", "urgent"];
+
+  if (!validPriorities.includes(priority)) {
+    return res.status(400).json({
+      message: `Invalid priority. Valid priorities are: ${validPriorities.join(
+        ", ",
+      )}`,
+    });
+  }
+
+  const validCategories = [
+    "technical",
+    "billing",
+    "account",
+    "general",
+    "other",
+  ];
+
+  if (!validCategories.includes(category)) {
+    return res.status(400).json({
+      message: `Invalid category. Valid categories are: ${validCategories.join(
+        ", ",
+      )}`,
+    });
+  }
+
+  // Check for duplicate ticket title for the same customer
+  const duplicateTicket = tickets.find(
+    (ticket) => ticket.customerId === customerId && ticket.title === title,
+  );
+
+  if (duplicateTicket) {
+    return res.status(409).json({
+      message: "A ticket with the same title already exists for this customer.",
+    });
+  }
+
+  // Generate a new ticket ID based on the last ticket's ID
+  const lastTicket = tickets[tickets.length - 1];
+  const newId = lastTicket ? `t${+lastTicket.id.slice(1) + 1}` : "t1001";
+  const currentDate = new Date().toISOString();
+
+  // Create a new ticket object
+  const newTicket = {
+    id: newId,
+    customerId,
+    title,
+    description,
+    priority,
+    category,
+    status: "open",
+    createdAt: currentDate,
+    updatedAt: currentDate,
+    assignedAgentId: null,
+    resolvedAt: null,
+    closedAt: null,
+  };
+
+  // Add the new ticket to the tickets array
+  tickets.push(newTicket);
+
+  // Return the newly created ticket
+  return res.status(201).json(newTicket);
+};
+
+export {
+  getAllTickets,
+  getTicketById,
+  getTicketComments,
+  getTicketsByAgentId,
+  createTicket,
+};
