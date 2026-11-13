@@ -22,7 +22,7 @@ const getArchivedTickets = (req, res) => {
 };
 
 const getTicketById = (req, res) => {
-  const id = req.params.ticketID;
+  const id = req.params.id;
 
   if (!id) {
     return res.status(400).json({ message: "Invalid ticket ID" });
