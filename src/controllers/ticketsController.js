@@ -1,5 +1,16 @@
 import { users, tickets, comments } from "../data/data.js";
 
+const getCurrentDate = () => new Date().toISOString();
+const validPriorities = ["low", "medium", "high", "urgent"];
+const validCategories = ["technical", "billing", "account", "general", "other"];
+const validStatuses = [
+  "open",
+  "in_progress",
+  "waiting_on_customer",
+  "resolved",
+  "closed",
+];
+
 const getAllTickets = (req, res) => {
   res.status(200).json(tickets);
 };
@@ -96,8 +107,6 @@ const createTicket = (req, res) => {
     return res.status(404).json({ message: "Customer not found" });
   }
 
-  const validPriorities = ["low", "medium", "high", "urgent"];
-
   if (!validPriorities.includes(priority)) {
     return res.status(400).json({
       message: `Invalid priority. Valid priorities are: ${validPriorities.join(
@@ -136,7 +145,6 @@ const createTicket = (req, res) => {
   // Generate a new ticket ID based on the last ticket's ID
   const lastTicket = tickets[tickets.length - 1];
   const newId = lastTicket ? `t${+lastTicket.id.slice(1) + 1}` : "t1001";
-  const currentDate = new Date().toISOString();
 
   // Create a new ticket object
   const newTicket = {
@@ -147,8 +155,8 @@ const createTicket = (req, res) => {
     priority,
     category,
     status: "open",
-    createdAt: currentDate,
-    updatedAt: currentDate,
+    createdAt: getCurrentDate(),
+    updatedAt: getCurrentDate(),
     assignedAgentId: null,
     resolvedAt: null,
     closedAt: null,
@@ -161,10 +169,59 @@ const createTicket = (req, res) => {
   return res.status(201).json(newTicket);
 };
 
+const updateTicket = (req, res) => {
+  const id = req.params.ticketId;
+  const { title, description, priority, category, status } = req.body;
+
+  if (!id) {
+    return res.status(400).json({
+      message: "Invalid Ticket Id. Please provide a valid ticket ID.",
+    });
+  }
+
+  const ticket = tickets.find((ticket) => ticket.id === id);
+
+  if (!ticket) {
+    return res.status(404).json({ message: "Ticket not found" });
+  }
+
+  if (!title && !description && !priority && !category && !status) {
+    return res.status(400).json({
+      message: "At least one field is required for updating a ticket.",
+    });
+  }
+
+  if (priority && !validPriorities.includes(priority)) {
+    return res.status(400).json({
+      message: `Invalid priority. Valid priorities are: ${validPriorities.join(
+        ", ",
+      )}`,
+    });
+  }
+
+  // Check if category is provided and is valid
+  if (category && !validCategories.includes(category)) {
+    return res.status(400).json({
+      message: `Invalid category. Valid categories are: ${validCategories.join(
+        ", ",
+      )}`,
+    });
+  }
+  if (title) ticket.title = title;
+  if (description) ticket.description = description;
+  if (priority) ticket.priority = priority;
+  if (category) ticket.category = category;
+  if (status) ticket.status = status;
+
+  ticket.updatedAt = getCurrentDate();
+  return res.status(200).json(ticket);
+};
+
 export {
   getAllTickets,
   getTicketById,
   getTicketComments,
   getTicketsByAgentId,
   createTicket,
+  updateTicket,
 };

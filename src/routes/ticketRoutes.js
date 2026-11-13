@@ -5,6 +5,7 @@ import {
   getTicketComments,
   getTicketsByAgentId,
   createTicket,
+  updateTicket,
 } from "../controllers/ticketsController.js";
 
 const router = express.Router();
@@ -34,4 +35,10 @@ router.get("/agent/:agentId", getTicketsByAgentId);
 // @desc Create a new ticket
 // @access Customer
 router.post("/", createTicket);
+
+// PUT ROUTES
+// @route PUT /api/tickets/:ticketId
+// @desc Update a ticket by ID
+// @access Private (Agent/Admin)
+router.put("/:ticketId", updateTicket);
 export default router;
