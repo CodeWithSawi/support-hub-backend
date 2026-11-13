@@ -1,3 +1,4 @@
+// User data
 const users = [
   // CUSTOMERS
   {
@@ -114,6 +115,8 @@ const users = [
   },
 ];
 
+// Ticket data
+// adding isDeleted and deletedAt property to tickets and comments for soft deletion
 const tickets = [
   {
     id: "t1001",
@@ -129,6 +132,8 @@ const tickets = [
     updatedAt: "2026-11-02T10:30:00.000Z",
     resolvedAt: null,
     closedAt: null,
+    isDeleted: false,
+    deletedAt: null,
   },
   {
     id: "t1002",
@@ -144,6 +149,8 @@ const tickets = [
     updatedAt: "2026-11-03T11:00:00.000Z",
     resolvedAt: null,
     closedAt: null,
+    isDeleted: false,
+    deletedAt: null,
   },
   {
     id: "t1003",
@@ -159,6 +166,8 @@ const tickets = [
     updatedAt: "2026-11-03T09:15:00.000Z",
     resolvedAt: null,
     closedAt: null,
+    isDeleted: false,
+    deletedAt: null,
   },
   {
     id: "t1004",
@@ -174,6 +183,8 @@ const tickets = [
     updatedAt: "2026-11-03T12:00:00.000Z",
     resolvedAt: null,
     closedAt: null,
+    isDeleted: false,
+    deletedAt: null,
   },
   {
     id: "t1005",
@@ -189,6 +200,8 @@ const tickets = [
     updatedAt: "2026-11-05T14:00:00.000Z",
     resolvedAt: null,
     closedAt: null,
+    isDeleted: false,
+    deletedAt: null,
   },
   {
     id: "t1006",
@@ -204,6 +217,8 @@ const tickets = [
     updatedAt: "2026-11-06T10:00:00.000Z",
     resolvedAt: "2026-11-06T10:00:00.000Z",
     closedAt: null,
+    isDeleted: false,
+    deletedAt: null,
   },
   {
     id: "t1007",
@@ -219,6 +234,8 @@ const tickets = [
     updatedAt: "2026-11-06T09:30:00.000Z",
     resolvedAt: null,
     closedAt: null,
+    isDeleted: false,
+    deletedAt: null,
   },
   {
     id: "t1008",
@@ -234,6 +251,8 @@ const tickets = [
     updatedAt: "2026-11-06T13:30:00.000Z",
     resolvedAt: null,
     closedAt: null,
+    isDeleted: false,
+    deletedAt: null,
   },
   {
     id: "t1009",
@@ -249,6 +268,8 @@ const tickets = [
     updatedAt: "2026-11-09T16:00:00.000Z",
     resolvedAt: "2026-11-09T12:00:00.000Z",
     closedAt: "2026-11-09T16:00:00.000Z",
+    isDeleted: false,
+    deletedAt: null,
   },
   {
     id: "t1010",
@@ -264,6 +285,8 @@ const tickets = [
     updatedAt: "2026-11-08T10:00:00.000Z",
     resolvedAt: null,
     closedAt: null,
+    isDeleted: false,
+    deletedAt: null,
   },
   {
     id: "t1011",
@@ -279,6 +302,8 @@ const tickets = [
     updatedAt: "2026-11-10T11:00:00.000Z",
     resolvedAt: null,
     closedAt: null,
+    isDeleted: false,
+    deletedAt: null,
   },
   {
     id: "t1012",
@@ -294,9 +319,12 @@ const tickets = [
     updatedAt: "2026-11-10T08:30:00.000Z",
     resolvedAt: null,
     closedAt: null,
+    isDeleted: false,
+    deletedAt: null,
   },
 ];
 
+// Comment data
 const comments = [
   // TICKET t1001
   {

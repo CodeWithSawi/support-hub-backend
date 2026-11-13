@@ -12,11 +12,17 @@ const validStatuses = [
 ];
 
 const getAllTickets = (req, res) => {
-  res.status(200).json(tickets);
+  const activeTickets = tickets.filter((ticket) => !ticket.isDeleted);
+  res.status(200).json(activeTickets);
+};
+
+const getArchivedTickets = (req, res) => {
+  const archivedTickets = tickets.filter((ticket) => ticket.isDeleted);
+  res.status(200).json(archivedTickets);
 };
 
 const getTicketById = (req, res) => {
-  const id = req.params.id;
+  const id = req.params.ticketID;
 
   if (!id) {
     return res.status(400).json({ message: "Invalid ticket ID" });
@@ -24,7 +30,7 @@ const getTicketById = (req, res) => {
 
   const ticket = tickets.find((ticket) => id === ticket.id);
 
-  if (!ticket) {
+  if (!ticket || ticket.isDeleted) {
     return res.status(404).json({ message: "Ticket not found" });
   }
 
@@ -160,6 +166,7 @@ const createTicket = (req, res) => {
     assignedAgentId: null,
     resolvedAt: null,
     closedAt: null,
+    isDeleted: false,
   };
 
   // Add the new ticket to the tickets array
@@ -217,6 +224,66 @@ const updateTicket = (req, res) => {
   return res.status(200).json(ticket);
 };
 
+const deleteTicket = (req, res) => {
+  const id = req.params.ticketId;
+
+  if (!id) {
+    return res.status(400).json({ message: "Invalid ticket ID" });
+  }
+
+  const findTicket = tickets.find((ticket) => ticket.id === id);
+
+  if (!findTicket) {
+    return res.status(404).json({ message: "Ticket not found" });
+  }
+
+  if (findTicket.isDeleted) {
+    return res.status(409).json({
+      message: "Ticket is already deleted",
+    });
+  }
+
+  const currentDate = getCurrentDate();
+
+  findTicket.isDeleted = true;
+  findTicket.deletedAt = currentDate;
+  findTicket.updatedAt = currentDate;
+
+  return res.status(200).json({
+    message: "Ticket deleted successfully",
+    ticket: findTicket,
+  });
+};
+
+const restoreTicket = (req, res) => {
+  const id = req.params.ticketId;
+
+  if (!id) {
+    return res.status(400).json({ message: "Invalid ticket ID" });
+  }
+
+  const findTicket = tickets.find((ticket) => ticket.id === id);
+
+  if (!findTicket) {
+    return res.status(404).json({ message: "Ticket not found" });
+  }
+
+  if (!findTicket.isDeleted) {
+    return res.status(409).json({
+      message: "Ticket is not deleted",
+    });
+  }
+
+  findTicket.isDeleted = false;
+  findTicket.deletedAt = null;
+  findTicket.updatedAt = getCurrentDate();
+
+  return res.status(200).json({
+    message: "Ticket restored successfully",
+    ticket: findTicket,
+  });
+};
+
 export {
   getAllTickets,
   getTicketById,
@@ -224,4 +291,7 @@ export {
   getTicketsByAgentId,
   createTicket,
   updateTicket,
+  deleteTicket,
+  getArchivedTickets,
+  restoreTicket,
 };
