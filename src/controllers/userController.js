@@ -1,7 +1,8 @@
 import { users } from "../data/data.js";
 
 const getAllUsers = (req, res) => {
-  res.json(users);
+  const safeUsers = users.map(({ password, ...user }) => user);
+  res.json(safeUsers);
 };
 
 const getUserById = (req, res) => {

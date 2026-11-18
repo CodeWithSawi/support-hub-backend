@@ -34,6 +34,17 @@ const getTicketById = (req, res) => {
     return res.status(404).json({ message: "Ticket not found" });
   }
 
+  const user = req.user;
+  const isOwner = ticket.customerId === user.id;
+  const isAssignedAgent = ticket.assignedAgentId === user.id;
+  const isAdmin = user.role === "admin";
+
+  if (!isOwner && !isAssignedAgent && !isAdmin) {
+    return res.status(403).json({
+      message: "Forbidden: You do not have access to this ticket",
+    });
+  }
+
   return res.status(200).json(ticket);
 };
 
@@ -49,22 +60,26 @@ const getTicketComments = (req, res) => {
   // Check if the ticket exists
   const ticket = tickets.find((ticket) => ticket.id === ticketId);
 
-  if (!ticket) {
+  if (!ticket || ticket.isDeleted) {
     return res.status(404).json({
       message: "Ticket not found",
     });
   }
 
+  const user = req.user;
+  const isOwner = ticket.customerId === user.id;
+  const isAssignedAgent = ticket.assignedAgentId === user.id;
+  const isAdmin = user.role === "admin";
+
+  if (!isOwner && !isAssignedAgent && !isAdmin)
+    return res
+      .status(403)
+      .send(`Forbidden: You don't have access to this tickets' comment`);
+
   // Find all comments belonging to this ticket
   const ticketComments = comments.filter(
     (comment) => comment.ticketId === ticketId,
   );
-
-  if (ticketComments.length === 0) {
-    return res.status(404).json({
-      message: "No comments found for this ticket",
-    });
-  }
 
   return res.status(200).json(ticketComments);
 };
@@ -73,44 +88,57 @@ const getTicketsByAgentId = (req, res) => {
   const agentId = req.params.agentId;
 
   if (!agentId) {
-    return res.status(400).json({ message: "Invalid agent ID" });
+    return res.status(400).json({
+      message: "Invalid agent ID",
+    });
   }
 
+  // Get the authenticated user
+  const user = req.user;
+
+  // Check if the requester is an admin
+  const isAdmin = user.role === "admin";
+
+  // Check if the requester is requesting their own tickets
+  const isRequestingOwnTicket = agentId === user.id;
+
+  // Deny access if the requester is neither an admin nor the agent
+  if (!isRequestingOwnTicket && !isAdmin) {
+    return res.status(403).json({
+      message: "Forbidden: You don't have access to these tickets.",
+    });
+  }
+
+  // Check if the requested agent exists
   const agent = users.find(
     (user) => user.id === agentId && user.role === "support_agent",
   );
 
   if (!agent) {
-    return res.status(404).json({ message: "Agent not found" });
+    return res.status(404).json({
+      message: "Agent not found",
+    });
   }
 
+  // Find all active tickets assigned to this agent
   const agentTickets = tickets.filter(
-    (ticket) => ticket.assignedAgentId === agentId,
+    (ticket) => ticket.assignedAgentId === agentId && !ticket.isDeleted,
   );
 
-  if (agentTickets.length === 0) {
-    return res.status(404).json({ message: "No tickets found for this agent" });
-  }
-
+  // Return the tickets, even if the array is empty
   return res.status(200).json(agentTickets);
 };
 
 const createTicket = (req, res) => {
   // Destructure the required fields from the request body
-  const { customerId, title, description, priority, category } = req.body;
+  const customerId = req.user.id;
+
+  const { title, description, priority, category } = req.body;
 
   if (!title || !description || !priority || !category || !customerId) {
     return res
       .status(400)
       .json({ message: "Missing required fields. All fields are required." });
-  }
-  // Find the customer
-  const customer = users.find(
-    (user) => user.id === customerId && user.role === "customer",
-  );
-
-  if (!customer) {
-    return res.status(404).json({ message: "Customer not found" });
   }
 
   if (!validPriorities.includes(priority)) {
@@ -139,7 +167,10 @@ const createTicket = (req, res) => {
 
   // Check for duplicate ticket title for the same customer
   const duplicateTicket = tickets.find(
-    (ticket) => ticket.customerId === customerId && ticket.title === title,
+    (ticket) =>
+      ticket.customerId === customerId &&
+      ticket.title === title &&
+      !ticket.isDeleted,
   );
 
   if (duplicateTicket) {
@@ -167,6 +198,7 @@ const createTicket = (req, res) => {
     resolvedAt: null,
     closedAt: null,
     isDeleted: false,
+    deletedAt: null,
   };
 
   // Add the new ticket to the tickets array
@@ -180,17 +212,26 @@ const updateTicket = (req, res) => {
   const id = req.params.ticketId;
   const { title, description, priority, category, status } = req.body;
 
+  const ticket = tickets.find((ticket) => ticket.id === id);
+
   if (!id) {
     return res.status(400).json({
       message: "Invalid Ticket Id. Please provide a valid ticket ID.",
     });
   }
 
-  const ticket = tickets.find((ticket) => ticket.id === id);
-
-  if (!ticket) {
+  if (!ticket || !ticket.isDeleted) {
     return res.status(404).json({ message: "Ticket not found" });
   }
+
+  const user = req.user;
+  const isAdmin = user.role === "admin";
+  const isAssignedSupportAgent = ticket.assignedAgentId === user.id;
+
+  if (!isAdmin && !isAssignedSupportAgent)
+    return res
+      .status(403)
+      .send(`Forbidden: You don't have access to this Ticket`);
 
   if (!title && !description && !priority && !category && !status) {
     return res.status(400).json({
@@ -214,6 +255,14 @@ const updateTicket = (req, res) => {
       )}`,
     });
   }
+
+  if (status && !validStatuses.includes(status))
+    return res.status(400).json({
+      message: `Invalid category. Valid categories are: ${validCategories.join(
+        ", ",
+      )}`,
+    });
+
   if (title) ticket.title = title;
   if (description) ticket.description = description;
   if (priority) ticket.priority = priority;

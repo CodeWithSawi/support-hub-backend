@@ -1,4 +1,6 @@
 import express from "express";
+import authorizedRoles from "../middlewares/authorizeRoles.js";
+import authenticateUser from "../middlewares/authMiddleware.js";
 import {
   getAllTickets,
   getArchivedTickets,
@@ -13,28 +15,14 @@ import {
 
 const router = express.Router();
 
-// @route   GET /api/tickets
-// @desc    Get all tickets
-// @access  Public
-router.get("/", getAllTickets);
+router.use(authenticateUser);
 
-// GET /api/tickets/archived
-router.get("/archived", getArchivedTickets);
-
-// @route GET /api/tickets/:id
-// @desc Get a ticket by ID
-// @access Public
-router.get("/:id", getTicketById);
-
-// @route GET /api/tickets/:ticketId/comments
-// @desc Get comments for a specific ticket
-// @access Public
-router.get("/:ticketId/comments", getTicketComments);
-
-// @route GET /api/tickets/agent/:agentId
-// @desc Get tickets assigned to a specific agent
-// @access Public
+// GET ROUTES
+router.get("/", authorizedRoles("support_agent", "admin"), getAllTickets);
+router.get("/archived", authorizedRoles("admin"), getArchivedTickets);
 router.get("/agent/:agentId", getTicketsByAgentId);
+router.get("/:ticketId/comments", getTicketComments);
+router.get("/:id", getTicketById);
 
 // POST ROUTES
 // @route POST /api/tickets
@@ -46,15 +34,15 @@ router.post("/", createTicket);
 // @route PUT /api/tickets/:ticketId
 // @desc Update a ticket by ID
 // @access Private (Agent/Admin)
-router.put("/:ticketId", updateTicket);
+router.put("/:ticketId", authorizedRoles("admin"), updateTicket);
 
 // DELETE ROUTES
 // @route DELETE /api/tickets/:ticketId
 // @desc Delete a ticket by ID
 // @access Private (Admin)
-router.delete("/:ticketId", deleteTicket);
+router.delete("/:ticketId", authorizedRoles("admin"), deleteTicket);
 
 // PATCH /api/tickets/:ticketId/restore
-router.patch("/:ticketId/restore", restoreTicket);
+router.patch("/:ticketId/restore", authorizedRoles("admin"), restoreTicket);
 
 export default router;
