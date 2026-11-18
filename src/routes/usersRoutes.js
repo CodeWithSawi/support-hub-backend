@@ -1,16 +1,21 @@
 import express from "express";
+import authorizedRoles from "../middlewares/authorizeRoles.js";
+import authenticateUser from "../middlewares/authMiddleware.js";
+
 import { getAllUsers, getUserById } from "../controllers/userController.js";
 
 const router = express.Router();
 
-// @route   GET /api/users
-// @desc    Get all users
-// @access  Public
-router.get("/", getAllUsers);
+// All user routes require authentication.
+router.use(authenticateUser);
 
-// @route GET /api/users/:id
-// @desc Get a user by ID
-// @access Public
+// Get all users: Admin only.
+router.get("/", authorizedRoles("admin"), getAllUsers);
+
+// Get a user's profile.
+// Controller must check that the requester is either:
+// 1. The user whose profile is being requested.
+// 2. An admin.
 router.get("/:id", getUserById);
 
 export default router;
