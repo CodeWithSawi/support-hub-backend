@@ -1,3 +1,6 @@
+import { hashPassword } from "../utils/passwordUtils.js";
+
+const seedPassword = await hashPassword("SupportHub123");
 // User data
 const users = [
   // CUSTOMERS
@@ -5,6 +8,7 @@ const users = [
     id: "u1",
     name: "John Kamara",
     email: "john.kamara@example.com",
+    password: seedPassword,
     role: "customer",
     accountStatus: "active",
     createdAt: "2026-10-20T09:00:00.000Z",
@@ -14,6 +18,7 @@ const users = [
     id: "u2",
     name: "Mary Johnson",
     email: "mary.johnson@example.com",
+    password: seedPassword,
     role: "customer",
     accountStatus: "active",
     createdAt: "2026-10-21T10:15:00.000Z",
@@ -23,6 +28,7 @@ const users = [
     id: "u3",
     name: "David Williams",
     email: "david.williams@example.com",
+    password: seedPassword,
     role: "customer",
     accountStatus: "active",
     createdAt: "2026-10-22T11:30:00.000Z",
@@ -32,6 +38,7 @@ const users = [
     id: "u4",
     name: "Sarah Conteh",
     email: "sarah.conteh@example.com",
+    password: seedPassword,
     role: "customer",
     accountStatus: "active",
     createdAt: "2026-10-23T08:45:00.000Z",
@@ -41,6 +48,7 @@ const users = [
     id: "u5",
     name: "Michael Brown",
     email: "michael.brown@example.com",
+    password: seedPassword,
     role: "customer",
     accountStatus: "active",
     createdAt: "2026-10-24T12:00:00.000Z",
@@ -50,6 +58,7 @@ const users = [
     id: "u6",
     name: "Fatmata Kamara",
     email: "fatmata.kamara@example.com",
+    password: seedPassword,
     role: "customer",
     accountStatus: "active",
     createdAt: "2026-10-25T14:20:00.000Z",
@@ -59,6 +68,7 @@ const users = [
     id: "u7",
     name: "Daniel Smith",
     email: "daniel.smith@example.com",
+    password: seedPassword,
     role: "customer",
     accountStatus: "active",
     createdAt: "2026-10-26T09:40:00.000Z",
@@ -68,6 +78,7 @@ const users = [
     id: "u8",
     name: "Aminata Sesay",
     email: "aminata.sesay@example.com",
+    password: seedPassword,
     role: "customer",
     accountStatus: "active",
     createdAt: "2026-10-27T15:10:00.000Z",
@@ -79,6 +90,7 @@ const users = [
     id: "u9",
     name: "Robert Taylor",
     email: "robert@techworld.example",
+    password: seedPassword,
     role: "support_agent",
     accountStatus: "active",
     createdAt: "2026-10-15T08:00:00.000Z",
@@ -88,6 +100,7 @@ const users = [
     id: "u10",
     name: "Grace Williams",
     email: "grace@techworld.example",
+    password: seedPassword,
     role: "support_agent",
     accountStatus: "active",
     createdAt: "2026-10-15T08:30:00.000Z",
@@ -97,6 +110,7 @@ const users = [
     id: "u11",
     name: "Peter Johnson",
     email: "peter@techworld.example",
+    password: seedPassword,
     role: "support_agent",
     accountStatus: "active",
     createdAt: "2026-10-15T09:00:00.000Z",
@@ -106,8 +120,9 @@ const users = [
   // ADMINISTRATOR
   {
     id: "u12",
-    name: "Admin User",
-    email: "admin@techworld.example",
+    name: "Momoh Sawi",
+    email: "slim@gmail.com",
+    password: seedPassword,
     role: "admin",
     accountStatus: "active",
     createdAt: "2026-10-10T08:00:00.000Z",
@@ -319,7 +334,7 @@ const tickets = [
     updatedAt: "2026-11-10T08:30:00.000Z",
     resolvedAt: null,
     closedAt: null,
-    isDeleted: false,
+    isDeleted: true,
     deletedAt: null,
   },
 ];

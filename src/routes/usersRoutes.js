@@ -2,7 +2,12 @@ import express from "express";
 import authorizedRoles from "../middlewares/authorizeRoles.js";
 import authenticateUser from "../middlewares/authMiddleware.js";
 
-import { getAllUsers, getUserById } from "../controllers/userController.js";
+import {
+  getAllUsers,
+  getUserById,
+  updateUsersRole,
+  updateAccountStatus,
+} from "../controllers/userController.js";
 
 const router = express.Router();
 
@@ -16,6 +21,12 @@ router.get("/", authorizedRoles("admin"), getAllUsers);
 // Controller must check that the requester is either:
 // 1. The user whose profile is being requested.
 // 2. An admin.
-router.get("/:id", getUserById);
+router.get("/:id", authorizedRoles("admin"), getUserById);
+
+// Update users role
+router.patch("/:id/role", updateUsersRole);
+
+// Activate or deactivate users account
+router.patch("/:id/status", authorizedRoles("admin"), updateAccountStatus);
 
 export default router;
