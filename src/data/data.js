@@ -50,7 +50,7 @@ const users = [
     email: "michael.brown@example.com",
     password: seedPassword,
     role: "customer",
-    accountStatus: "active",
+    accountStatus: "inactive",
     createdAt: "2026-10-24T12:00:00.000Z",
     updatedAt: "2026-10-24T12:00:00.000Z",
   },

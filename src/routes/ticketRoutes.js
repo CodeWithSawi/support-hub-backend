@@ -1,6 +1,8 @@
 import express from "express";
+
 import authorizedRoles from "../middlewares/authorizeRoles.js";
 import authenticateUser from "../middlewares/authMiddleware.js";
+
 import {
   getAllTickets,
   getArchivedTickets,
@@ -11,38 +13,49 @@ import {
   updateTicket,
   deleteTicket,
   restoreTicket,
+  assignTicket,
+  unassignTicket,
 } from "../controllers/ticketsController.js";
 
 const router = express.Router();
 
+// All ticket routes require authentication
 router.use(authenticateUser);
 
 // GET ROUTES
 router.get("/", authorizedRoles("support_agent", "admin"), getAllTickets);
+
 router.get("/archived", authorizedRoles("admin"), getArchivedTickets);
-router.get("/agent/:agentId", getTicketsByAgentId);
+
+router.get(
+  "/agent/:agentId",
+  authorizedRoles("support_agent", "admin"),
+  getTicketsByAgentId,
+);
+
 router.get("/:ticketId/comments", getTicketComments);
 router.get("/:id", getTicketById);
 
-// POST ROUTES
-// @route POST /api/tickets
-// @desc Create a new ticket
-// @access Customer
-router.post("/", createTicket);
+// CREATE TICKET: Customers only
+router.post("/", authorizedRoles("customer"), createTicket);
 
-// PUT ROUTES
-// @route PUT /api/tickets/:ticketId
-// @desc Update a ticket by ID
-// @access Private (Agent/Admin)
-router.put("/:ticketId", authorizedRoles("admin"), updateTicket);
+// UPDATE TICKET: Assigned agents and admins
+router.put(
+  "/:ticketId",
+  authorizedRoles("admin", "support_agent"),
+  updateTicket,
+);
 
-// DELETE ROUTES
-// @route DELETE /api/tickets/:ticketId
-// @desc Delete a ticket by ID
-// @access Private (Admin)
+// DELETE TICKET: Admin only
 router.delete("/:ticketId", authorizedRoles("admin"), deleteTicket);
 
-// PATCH /api/tickets/:ticketId/restore
+// RESTORE TICKET: Admin only
 router.patch("/:ticketId/restore", authorizedRoles("admin"), restoreTicket);
+
+// ASSIGN TICKET: Admin only
+router.patch("/:ticketId/assign", authorizedRoles("admin"), assignTicket);
+
+// UNASSIGN TICKET: Admin only
+router.patch("/:ticketId/unassign", authorizedRoles("admin"), unassignTicket);
 
 export default router;

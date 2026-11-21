@@ -1,5 +1,4 @@
 import jwt from "jsonwebtoken";
-import "dotenv/config";
 import { hashPassword, comparePassword } from "../utils/passwordUtils.js";
 import { users } from "../data/data.js";
 
@@ -17,11 +16,29 @@ const register = async (req, res) => {
       });
     }
 
-    // 3. Normalize user input
+    // 3. Validate input types
+    if (
+      typeof name !== "string" ||
+      typeof email !== "string" ||
+      typeof password !== "string"
+    ) {
+      return res.status(400).json({
+        message: "Name, email, and password must be strings.",
+      });
+    }
+
+    // 4. Normalize user input
     name = name.trim();
     email = email.trim().toLowerCase();
 
-    // 4. Validate email format
+    // 5. Validate empty name and email
+    if (!name || !email) {
+      return res.status(400).json({
+        message: "Name and email cannot be empty.",
+      });
+    }
+
+    // 6. Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!emailRegex.test(email)) {
@@ -30,14 +47,20 @@ const register = async (req, res) => {
       });
     }
 
-    // 5. Validate password length
+    // 7. Validate password
+    if (!password.trim()) {
+      return res.status(400).json({
+        message: "Password cannot contain only whitespace.",
+      });
+    }
+
     if (password.length < 8) {
       return res.status(400).json({
         message: "Password must be at least 8 characters long.",
       });
     }
 
-    // 6. Check whether the email already exists
+    // 8. Check whether the email already exists
     const existingUser = users.find(
       (user) => user.email.toLowerCase() === email,
     );
@@ -48,17 +71,17 @@ const register = async (req, res) => {
       });
     }
 
-    // 7. Hash the password
+    // 9. Hash the password
     const hashedPassword = await hashPassword(password);
 
-    // 8. Generate a new user ID
+    // 10. Generate a new user ID
     const lastUser = users[users.length - 1];
     const newId = lastUser ? `u${Number(lastUser.id.slice(1)) + 1}` : "u1";
 
-    // 9. Generate timestamps
+    // 11. Generate timestamps
     const timestamp = currentDate();
 
-    // 10. Create the new user
+    // 12. Create the new user
     const newUser = {
       id: newId,
       name,
@@ -70,10 +93,10 @@ const register = async (req, res) => {
       updatedAt: timestamp,
     };
 
-    // 11. Save the user
+    // 13. Save the user
     users.push(newUser);
 
-    // 12. Remove password before sending response
+    // 14. Remove password before sending response
     const { password: userPassword, ...userWithoutPassword } = newUser;
 
     return res.status(201).json({
@@ -90,59 +113,87 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
-  const { email, password } = req.body;
+  try {
+    // 1. Extract login details
+    const { email, password } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({
-      message: "Email and password are required.",
+    // 2. Validate required fields
+    if (!email || !password) {
+      return res.status(400).json({
+        message: "Email and password are required.",
+      });
+    }
+
+    // 3. Validate input types
+    if (typeof email !== "string" || typeof password !== "string") {
+      return res.status(400).json({
+        message: "Email and password must be strings.",
+      });
+    }
+
+    // 4. Normalize email
+    const normalizeEmail = email.trim().toLowerCase();
+
+    if (!normalizeEmail) {
+      return res.status(400).json({
+        message: "Email cannot be empty.",
+      });
+    }
+
+    // 5. Find user
+    const user = users.find(
+      (user) => user.email.toLowerCase() === normalizeEmail,
+    );
+
+    if (!user || !user.password) {
+      return res.status(401).json({
+        message: "Invalid email or password.",
+      });
+    }
+
+    // 6. Check account status
+    if (user.accountStatus !== "active") {
+      return res.status(403).json({
+        message: "Your account is inactive. Please contact an administrator.",
+      });
+    }
+
+    // 7. Compare passwords
+    const isPasswordValid = await comparePassword(password, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        message: "Invalid email or password.",
+      });
+    }
+
+    // 8. Generate JWT
+    const token = jwt.sign(
+      {
+        id: user.id,
+        role: user.role,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1h",
+      },
+    );
+
+    // 9. Remove password before sending response
+    const { password: userPassword, ...userWithoutPassword } = user;
+
+    return res.status(200).json({
+      message: "Login successful.",
+      token,
+      user: userWithoutPassword,
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+
+    return res.status(500).json({
+      message: "An unexpected error occurred during login.",
     });
   }
-
-  const normalizeEmail = email.trim().toLowerCase();
-
-  const user = users.find(
-    (user) => user.email.toLowerCase() === normalizeEmail,
-  );
-
-  if (!user) {
-    return res.status(401).json({
-      message: "Invalid email or password.",
-    });
-  }
-
-  if (!user.password) {
-    return res.status(401).json({
-      message: "Invalid email or password.",
-    });
-  }
-
-  const isPasswordValid = await comparePassword(password, user.password);
-
-  if (!isPasswordValid) {
-    return res.status(401).json({
-      message: "Invalid email or password.",
-    });
-  }
-
-  const token = jwt.sign(
-    {
-      id: user.id,
-      role: user.role,
-    },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: "1h",
-    },
-  );
-
-  // Remove password before sending response
-  const { password: userPassword, ...userWithoutPassword } = user;
-
-  return res.status(200).json({
-    message: "Login successful.",
-    token: token,
-    user: userWithoutPassword,
-  });
 };
 
 export { register, login };

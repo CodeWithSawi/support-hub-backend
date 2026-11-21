@@ -11,22 +11,18 @@ import {
 
 const router = express.Router();
 
-// All user routes require authentication.
 router.use(authenticateUser);
 
-// Get all users: Admin only.
+// Get all users: Admin only
 router.get("/", authorizedRoles("admin"), getAllUsers);
 
-// Get a user's profile.
-// Controller must check that the requester is either:
-// 1. The user whose profile is being requested.
-// 2. An admin.
-router.get("/:id", authorizedRoles("admin"), getUserById);
+// Get own profile or any profile as admin
+router.get("/:id", getUserById);
 
-// Update users role
-router.patch("/:id/role", updateUsersRole);
+// Update user role: Admin only
+router.patch("/:id/role", authorizedRoles("admin"), updateUsersRole);
 
-// Activate or deactivate users account
+// Activate or deactivate account: Admin only
 router.patch("/:id/status", authorizedRoles("admin"), updateAccountStatus);
 
 export default router;
