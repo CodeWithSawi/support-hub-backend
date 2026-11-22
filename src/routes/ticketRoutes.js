@@ -15,6 +15,7 @@ import {
   restoreTicket,
   assignTicket,
   unassignTicket,
+  createComment,
 } from "../controllers/ticketsController.js";
 
 const router = express.Router();
@@ -32,12 +33,12 @@ router.get(
   authorizedRoles("support_agent", "admin"),
   getTicketsByAgentId,
 );
-
 router.get("/:ticketId/comments", getTicketComments);
 router.get("/:id", getTicketById);
 
 // CREATE TICKET: Customers only
 router.post("/", authorizedRoles("customer"), createTicket);
+router.post("/:ticketId/comments", createComment);
 
 // UPDATE TICKET: Assigned agents and admins
 router.put(
