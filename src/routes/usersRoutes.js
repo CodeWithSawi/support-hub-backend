@@ -5,6 +5,7 @@ import authenticateUser from "../middlewares/authMiddleware.js";
 import {
   getAllUsers,
   getUserById,
+  getSupportAgents,
   updateUsersRole,
   updateAccountStatus,
 } from "../controllers/userController.js";
@@ -15,6 +16,8 @@ router.use(authenticateUser);
 
 // Get all users: Admin only
 router.get("/", authorizedRoles("admin"), getAllUsers);
+// Get all users: Admin only
+router.get("/agents", authorizedRoles("admin"), getSupportAgents);
 
 // Get own profile or any profile as admin
 router.get("/:id", getUserById);

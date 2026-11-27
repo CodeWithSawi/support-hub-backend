@@ -21,6 +21,29 @@ const getAllUsers = async (req, res) => {
       message: "Failed to retrieve users.",
     });
   }
+
+};
+
+// ==========================================
+// GET ALL ACTIVE SUPPORT AGENTS
+// ==========================================
+const getSupportAgents = async (req, res) => {
+  try {
+    const agents = await User.find({
+      role: "support_agent",
+      accountStatus: "active",
+    })
+      .select("name email role")
+      .sort({ name: 1 });
+
+    return res.status(200).json(agents);
+  } catch (error) {
+    console.error("Error retrieving support agents:", error.message);
+
+    return res.status(500).json({
+      message: "Failed to retrieve support agents.",
+    });
+  }
 };
 
 // ==========================================
@@ -218,4 +241,4 @@ const updateAccountStatus = async (req, res) => {
 };
 
 // Export all controller functions.
-export { getAllUsers, getUserById, updateUsersRole, updateAccountStatus };
+export { getAllUsers,  getSupportAgents, getUserById, updateUsersRole, updateAccountStatus };

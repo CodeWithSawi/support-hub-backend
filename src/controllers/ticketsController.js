@@ -23,7 +23,7 @@ const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 const canAccessTicket = (ticket, user) => {
   const isOwner = ticket.customerId.toString() === user.id;
   const isAssignedAgent = ticket.assignedAgentId?.toString() === user.id;
-  const isAdmin = user.role === "admin";
+  const isAdmin = user.role === "admin" || 'support_agent';
 
   return isOwner || isAssignedAgent || isAdmin;
 };
@@ -81,11 +81,17 @@ const getAllTickets = async (req, res) => {
       isDeleted: false,
     };
 
+    // Apply optional filters
     if (status) filter.status = status;
     if (priority) filter.priority = priority;
     if (category) filter.category = category;
 
-    if (assignedAgentId) {
+    // Role-based ticket visibility
+    if (req.user.role === "support_agent") {
+      // Support agents can only retrieve tickets assigned to themselves.
+      filter.assignedAgentId = req.user.id;
+    } else if (assignedAgentId) {
+      // Admins can filter tickets by any assigned agent.
       filter.assignedAgentId = assignedAgentId;
     }
 
@@ -101,9 +107,11 @@ const getAllTickets = async (req, res) => {
       ];
     }
 
-    const tickets = await Ticket.find(filter).sort({
-      createdAt: -1,
-    });
+    const tickets = await Ticket.find(filter)
+      .populate("customerId", "name")
+      .sort({
+        createdAt: -1,
+      });
 
     return res.status(200).json(tickets);
   } catch (error) {
@@ -143,7 +151,9 @@ const getTicketById = async (req, res) => {
       });
     }
 
-    const ticket = await Ticket.findById(id);
+    const ticket = await Ticket.findById(id)
+      .populate("customerId", "name email")
+      .populate("assignedAgentId", "name email");
 
     if (!ticket || ticket.isDeleted) {
       return res.status(404).json({
